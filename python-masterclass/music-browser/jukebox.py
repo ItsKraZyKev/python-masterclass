@@ -32,6 +32,20 @@ def get_albums(event):
     for row in conn.execute('select albums.name from albums where albums.artist = ? order by albums.name', artist_id):
         alist.append(row[0])
     album_lv.set(tuple(alist))
+    song_lv.set(('Choose an album',))
+
+
+def get_songs(event):
+    lb = event.widget
+    index = int(lb.curselection()[0])
+    album_name = lb.get(index),
+
+    # get the artist ID from the database row
+    album_id = conn.execute('select albums._id from albums where albums.name=?', album_name).fetchone()
+    alist = []
+    for x in conn.execute('select songs.title from songs where songs.album = ? order by songs.track', album_id):
+        alist.append(x[0])
+    song_lv.set(tuple(alist))
 
 
 main_window = tkinter.Tk()
@@ -70,6 +84,7 @@ album_list = Scrollbox(main_window, listvariable=album_lv)
 album_list.grid(row=1, column=1, sticky='nsew', padx=(30, 0))
 album_list.config(border=2, relief='sunken')
 
+album_list.bind('<<ListboxSelect>>', get_songs)
 # ==== Songs Listbox =====
 song_lv = tkinter.Variable(main_window)
 song_lv.set(('Choose an album',))
@@ -78,8 +93,6 @@ song_list.grid(row=1, column=2, sticky='nsew', padx=(30, 0))
 song_list.config(border=2, relief='sunken')
 
 # ==== Main loop =====
-test_list = range(0, 101)
-album_lv.set(tuple(test_list))
 main_window.mainloop()
 print('Closing database connection')
 conn.close()
