@@ -11,7 +11,7 @@ conn = sqlite3.connect('music.db', )
 class Scrollbox(tkinter.Listbox):
 
     def __init__(self, window, **kwargs):
-        super().__init__(window, **kwargs)
+        super().__init__(window, exportselection=False, **kwargs)
 
         self.scrollbar = tkinter.Scrollbar(window, orient=tkinter.VERTICAL, command=self.yview)
 
@@ -19,6 +19,19 @@ class Scrollbox(tkinter.Listbox):
         super().grid(row=row, column=column, sticky=sticky, rowspan=rowspan, columnspan=columnspan, **kwargs)
         self.scrollbar.grid(row=row, column=column, sticky='nse', rowspan=rowspan)
         self['yscrollcommand'] = self.scrollbar.set
+
+
+def get_albums(event):
+    lb = event.widget
+    index = lb.curselection()[0]
+    artist_name = lb.get(index),
+
+    # get the artist ID from the database row
+    artist_id = conn.execute('select artists._id from artists where artists.name=?', artist_name).fetchone()
+    alist = []
+    for row in conn.execute('select albums.name from albums where albums.artist = ? order by albums.name', artist_id):
+        alist.append(row[0])
+    album_lv.set(tuple(alist))
 
 
 main_window = tkinter.Tk()
@@ -44,6 +57,11 @@ tkinter.Label(main_window, text='Songs').grid(row=0, column=2)
 artist_list = Scrollbox(main_window)
 artist_list.grid(row=1, column=0, sticky='nsew', rowspan=2, padx=(30, 0))
 artist_list.config(border=2, relief='sunken')
+
+for artist in conn.execute('select artists.name from artists order by artists.name'):
+    artist_list.insert(tkinter.END, artist[0])
+
+artist_list.bind('<<ListboxSelect>>', get_albums)
 
 # ==== Albums Listbox =====
 album_lv = tkinter.Variable(main_window)
