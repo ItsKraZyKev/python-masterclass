@@ -26,6 +26,7 @@ class DataListBox(Scrollbox):
 
         self.linked_box = None
         self.link_field = None
+        self.link_value = None
 
         self.cursor = connection.cursor()
         self.table = table
@@ -47,6 +48,7 @@ class DataListBox(Scrollbox):
         widget.link_field = link_field
 
     def requery(self, link_value=None):
+        self.link_value = link_value  # store the id so we konw the "master" record we're populated from
         if link_value and self.link_field:
             sql = self.sql_select + ' where ' + self.link_field + '=?' + self.sql_sort
             self.cursor.execute(sql, (link_value,))
@@ -66,8 +68,15 @@ class DataListBox(Scrollbox):
             index = self.curselection()[0]
             value = self.get(index),
 
-            # get the artist ID from the database row
-            link_id = self.cursor.execute(self.sql_select + ' where ' + self.field + '=?', value).fetchone()[1]
+            # get the ID from the database row
+            # make sure we are getting the correct one. by including the link_value if appropriate
+            if self.link_value:
+                value = value[0], self.link_value
+                sql_where = ' where ' + self.field + '=? AND ' + self.link_field + '=?'
+            else:
+                sql_where = ' where ' + self.field + '=?' \
+                                                     ''
+            link_id = self.cursor.execute(self.sql_select + sql_where, value).fetchone()[1]
             self.linked_box.requery(link_id)
 
 
