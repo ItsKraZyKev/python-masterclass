@@ -38,28 +38,28 @@ class DataListBox(Scrollbox):
     def clear(self):
         self.delete(0, tkinter.END)
 
-    def requery(self):
-        print(self.sql_select + self.sql_sort)  # TODO delete this line
-        self.cursor.execute(self.sql_select + self.sql_sort)
+    def requery(self, link_value=None):
+        if link_value:
+            sql = self.sql_select + ' where ' + 'artist' + '=?' + self.sql_sort
+            print(sql)  # TODO delete this line
+            self.cursor.execute(sql, (link_value,))
+        else:
+            print(self.sql_select + self.sql_sort)  # TODO delete this line
+            self.cursor.execute(self.sql_select + self.sql_sort)
 
         # clear the listbox contents before reloading
         self.clear()
         for value in self.cursor:
             self.insert(tkinter.END, value[0])
 
+    def on_select(self, event):
+        print(self is event.widget)  # TODO delete this line
+        index = self.curselection()[0]
+        value = self.get(index),
 
-def get_albums(event):
-    lb = event.widget
-    index = lb.curselection()[0]
-    artist_name = lb.get(index),
-
-    # get the artist ID from the database row
-    artist_id = conn.execute('select artists._id from artists where artists.name=?', artist_name).fetchone()
-    alist = []
-    for row in conn.execute('select albums.name from albums where albums.artist = ? order by albums.name', artist_id):
-        alist.append(row[0])
-    album_lv.set(tuple(alist))
-    song_lv.set(('Choose an album',))
+        # get the artist ID from the database row
+        link_id = self.cursor.execute(self.sql_select + 'where' + self.field + '=?', value).fetchone([1])
+        album_list.requery(link_id)
 
 
 def get_songs(event):
